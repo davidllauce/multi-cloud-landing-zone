@@ -1,0 +1,32 @@
+{
+  "resource_changes": [
+    {
+      "address": "google_storage_bucket.state",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "labels": {
+            "dll-cost-center": "dll-sre",
+            "dll-team": "sre",
+            "dll-owner": "david-llauce",
+            "env": "dev-poc"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_vpc.main",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "tags": {
+            "dll-cost-center": "dll-sre",
+            "dll-team": "sre",
+            "dll-owner": "david-llauce",
+            "env": "dev-poc"
+          }
+        }
+      }
+    }
+  ]
+}

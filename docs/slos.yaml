@@ -1,0 +1,15 @@
+version: "1"
+services:
+  - name: landing-zone-network
+    description: Shared networking foundation (VPC / Shared VPC, HA VPN, NAT).
+    slos:
+      - name: availability
+        objective: 99.99
+        window: 28d
+      - name: vpn-tunnel-availability
+        objective: 99.9
+        window: 28d
+    alerts:
+      - name: vpn-down
+        condition: HA VPN tunnel down
+        severity: page

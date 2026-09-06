@@ -1,0 +1,60 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  setup:
+    desc: Bootstrap the environment (uv, pre-commit)
+    cmds:
+      - uv venv
+      - uv sync --all-extras
+      - uv run pre-commit install
+
+  check:
+    desc: Run all validations (fmt + validate + lint + policy + test)
+    deps: [iac:fmt, iac:validate, iac:lint, test]
+
+  iac:fmt:
+    desc: Check Terraform formatting (recursive)
+    dir: terraform
+    cmds:
+      - terraform fmt -recursive -check
+
+  iac:validate:
+    desc: Validate the dev-poc root module
+    dir: terraform/environments/dev-poc
+    cmds:
+      - terraform init -backend=false
+      - terraform validate
+
+  iac:lint:
+    desc: Lint Terraform with tflint (recursive)
+    dir: terraform
+    cmds:
+      - tflint --recursive
+
+  iac:plan:
+    desc: Run terraform plan (dry-run) on dev-poc
+    dir: terraform/environments/dev-poc
+    cmds:
+      - terraform init -backend=false
+      - terraform plan
+
+  iac:policy:
+    desc: Run Conftest against the fixture plan
+    cmds:
+      - conftest test tests/fixtures/plan_valid.json --policy terraform/modules/policy
+
+  iac:cost:
+    desc: Estimate costs with Infracost (requires INFRACOST_API_KEY)
+    dir: terraform/environments/dev-poc
+    cmds:
+      - infracost breakdown --path . --format table
+
+  test:
+    desc: Run pytest (policy checks)
+    cmds:
+      - uv run pytest -q

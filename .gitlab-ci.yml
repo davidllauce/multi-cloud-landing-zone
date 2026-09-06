@@ -1,0 +1,36 @@
+stages:
+  - validate
+  - test
+
+variables:
+  PYTHON_VERSION: "3.12"
+
+validate:
+  stage: validate
+  image:
+    name: hashicorp/terraform:1.9
+    entrypoint: [""]
+  script:
+    - terraform fmt -recursive -check
+    - terraform init -backend=false
+    - terraform validate
+  needs: []
+
+tflint:
+  stage: validate
+  image:
+    name: ghcr.io/terraform-linters/tflint:latest
+    entrypoint: [""]
+  script:
+    - tflint --recursive
+  needs: []
+
+test:
+  stage: test
+  image:
+    name: ghcr.io/astral-sh/uv:0.5
+    entrypoint: [""]
+  script:
+    - uv sync --all-extras
+    - uv run pytest -q
+  needs: []

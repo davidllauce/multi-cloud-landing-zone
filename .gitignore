@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.uv/
+
+# Terraform / IaC
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfplan
+*.tfvars
+!example.tfvars
+
+# Secrets / local
+.env
+*.pem
+rootCA-key.pem
+
+# Tooling
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

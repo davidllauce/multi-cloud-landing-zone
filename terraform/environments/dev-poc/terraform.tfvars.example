@@ -1,0 +1,7 @@
+aws_region      = "us-east-1"
+gcp_project_id  = "dll-dev-poc"
+gcp_region      = "us-central1"
+environment     = "dev-poc"
+team            = "sre"
+gcs_state_bucket = "dll-dev-poc-tfstate"
+s3_state_bucket  = "dll-dev-poc-tfstate"

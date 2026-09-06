@@ -1,0 +1,11 @@
+{
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.unlabelled",
+      "change": {
+        "actions": ["create"],
+        "after": {}
+      }
+    }
+  ]
+}
