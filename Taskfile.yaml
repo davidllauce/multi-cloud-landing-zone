@@ -24,11 +24,14 @@ tasks:
       - terraform fmt -recursive -check
 
   iac:validate:
-    desc: Validate the dev-poc root module
-    dir: terraform/environments/dev-poc
+    desc: Validate all root modules (0-bootstrap, 1-landing-zone, dev, stg, prd)
+    dir: terraform
     cmds:
-      - terraform init -backend=false
-      - terraform validate
+      - |
+        for env in 0-bootstrap 1-landing-zone 2-environments/dev 2-environments/stg 2-environments/prd; do
+          echo "==> validating $env"
+          (cd "$env" && terraform init -backend=false >/dev/null && terraform validate)
+        done
 
   iac:lint:
     desc: Lint Terraform with tflint (recursive)
@@ -37,8 +40,8 @@ tasks:
       - tflint --recursive
 
   iac:plan:
-    desc: Run terraform plan (dry-run) on dev-poc
-    dir: terraform/environments/dev-poc
+    desc: Run terraform plan (dry-run) on dev (representative env)
+    dir: terraform/2-environments/dev
     cmds:
       - terraform init -backend=false
       - terraform plan
@@ -50,7 +53,7 @@ tasks:
 
   iac:cost:
     desc: Estimate costs with Infracost (requires INFRACOST_API_KEY)
-    dir: terraform/environments/dev-poc
+    dir: terraform/2-environments/dev
     cmds:
       - infracost breakdown --path . --format table
 

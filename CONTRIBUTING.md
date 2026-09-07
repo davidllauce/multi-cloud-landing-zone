@@ -12,7 +12,8 @@ See the [Quickstart](README.md#quickstart) and
 1. Create a branch from `main`.
 2. Run `task check` before committing.
 3. Keep Terraform modules in `terraform/modules/` and environment instances in
-   `terraform/environments/`.
+   `terraform/0-bootstrap/`, `terraform/1-landing-zone/` and
+   `terraform/2-environments/`.
 4. Every resource must carry the `dll-*` labels; OPA enforces this in CI.
 5. Document meaningful decisions as an ADR in `ADRs/`.
 

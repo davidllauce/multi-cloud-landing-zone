@@ -1,0 +1,13 @@
+aws_region             = "us-east-1"
+gcp_project_id         = "dll-stg"
+gcp_region             = "us-central1"
+environment            = "stg"
+team                   = "sre"
+aws_vpc_cidr           = "10.20.0.0/16"
+aws_public_subnet_cidrs  = ["10.20.1.0/24", "10.20.2.0/24"]
+aws_private_subnet_cidrs = ["10.20.10.0/24", "10.20.11.0/24"]
+gcp_network_name       = "stg-shared-vpc"
+gcp_subnets = [
+  { name = "subnet-a", cidr = "10.20.1.0/24" },
+  { name = "subnet-b", cidr = "10.20.2.0/24" },
+]

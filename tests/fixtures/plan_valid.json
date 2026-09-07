@@ -9,7 +9,7 @@
             "dll-cost-center": "dll-sre",
             "dll-team": "sre",
             "dll-owner": "david-llauce",
-            "env": "dev-poc"
+            "env": "dev"
           }
         }
       }
@@ -23,7 +23,7 @@
             "dll-cost-center": "dll-sre",
             "dll-team": "sre",
             "dll-owner": "david-llauce",
-            "env": "dev-poc"
+            "env": "dev"
           }
         }
       }

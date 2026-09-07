@@ -58,7 +58,7 @@ provider-specific resources are used only where the clouds genuinely differ.
 ```bash
 task setup       # uv venv + pre-commit
 task check       # fmt + validate + tflint + pytest + conftest
-task iac:plan    # terraform plan (dry-run) on the dev-poc environment
+task iac:plan    # terraform plan (dry-run) on the dev environment
 task iac:cost    # Infracost estimate (requires INFRACOST_API_KEY)
 ```
 
@@ -67,21 +67,29 @@ task iac:cost    # Infracost estimate (requires INFRACOST_API_KEY)
 Consume a module directly from this repository:
 
 ```hcl
-module "aws_landing_zone" {
-  source = "git::https://github.com/davidllauce/multi-cloud-landing-zone.git//terraform/modules/aws-landing-zone?ref=main"
+module "aws_org" {
+  source = "git::https://github.com/davidllauce/multi-cloud-landing-zone.git//terraform/modules/aws-org?ref=main"
 
-  region      = "us-east-1"
+  organization_root_id = "r-xxxx"
+}
+
+module "aws_network" {
+  source = "git::https://github.com/davidllauce/multi-cloud-landing-zone.git//terraform/modules/aws-network?ref=main"
+
   environment = "dev"
   team        = "sre"
 }
 
-module "gcp_landing_zone" {
-  source = "git::https://github.com/davidllauce/multi-cloud-landing-zone.git//terraform/modules/gcp-landing-zone?ref=main"
+module "gcp_org" {
+  source = "git::https://github.com/davidllauce/multi-cloud-landing-zone.git//terraform/modules/gcp-org?ref=main"
 
-  project_id  = "my-project"
-  region      = "us-central1"
-  environment = "dev"
-  team        = "sre"
+  folder_id = "folders/xxxx"
+}
+
+module "gcp_network" {
+  source = "git::https://github.com/davidllauce/multi-cloud-landing-zone.git//terraform/modules/gcp-network?ref=main"
+
+  region = "us-central1"
 }
 ```
 
@@ -99,14 +107,27 @@ task test         # pytest (includes policy checks)
 ```text
 terraform/
 ├── modules/                    # reusable, stateless modules
-│   ├── aws-landing-zone/       # org + SCPs, Transit Gateway, shared VPC
-│   ├── gcp-landing-zone/       # folders, Shared VPC, HA VPN, Cloud NAT
+│   ├── aws-org/                # AWS Organizations + SCP (org level, once)
+│   ├── aws-network/            # VPC, subnets, Transit Gateway (per env)
+│   ├── gcp-org/                # folders (org level, once)
+│   ├── gcp-network/            # Shared VPC, HA VPN, Cloud NAT (per env)
 │   ├── policy/                 # OPA policies (tags + naming)
 │   └── backend/                # remote state (S3 / GCS)
-└── environments/dev-poc/       # dev environment instance
+├── 0-bootstrap/                # state buckets (foundation, once)
+├── 1-landing-zone/             # org-level: aws-org + gcp-org (foundation, once)
+└── 2-environments/
+    ├── dev/                    # network: aws-network + gcp-network
+    ├── stg/                    # network: aws-network + gcp-network
+    └── prd/                    # network: aws-network + gcp-network
 tests/                          # pytest + policy checks
 docs/                           # architecture + SLOs
 ADRs/                           # architecture decision records
+```
+
+Apply order (see `docs/architecture`):
+
+```text
+0-bootstrap → 1-landing-zone → 2-environments/{dev, stg, prd}
 ```
 
 ## What is applied vs plan-only

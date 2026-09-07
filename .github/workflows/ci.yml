@@ -21,11 +21,13 @@ jobs:
       - name: Terraform fmt (recursive)
         working-directory: terraform
         run: terraform fmt -recursive -check
-      - name: Terraform validate (dev-poc)
-        working-directory: terraform/environments/dev-poc
+      - name: Terraform validate (all environments)
+        working-directory: terraform
         run: |
-          terraform init -backend=false
-          terraform validate
+          for env in 0-bootstrap 1-landing-zone 2-environments/dev 2-environments/stg 2-environments/prd; do
+            echo "==> validating $env"
+            (cd "$env" && terraform init -backend=false && terraform validate)
+          done
       - uses: terraform-linters/setup-tflint@v4
       - name: TFLint (recursive)
         working-directory: terraform

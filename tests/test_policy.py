@@ -24,7 +24,7 @@ def test_policy_requires_cost_center() -> None:
 
 
 def test_aws_module_declares_required_labels() -> None:
-    content = (TERRAFORM / "modules" / "aws-landing-zone" / "main.tf").read_text()
+    content = (TERRAFORM / "modules" / "aws-network" / "main.tf").read_text()
     assert '"dll-cost-center"' in content
     assert '"dll-team"' in content
     assert '"env"' in content

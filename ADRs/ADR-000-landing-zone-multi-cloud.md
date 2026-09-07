@@ -13,9 +13,10 @@ GCP emulators.
 
 ## Decision
 
-Model the landing zone as Terraform modules per provider (`aws-landing-zone`,
-`gcp-landing-zone`), a shared `policy` module (OPA/Conftest), and a shared
-`backend` module (remote state). Org-level resources (AWS Organizations/SCPs,
+Model the landing zone as Terraform modules split by concern: `aws-org` and
+`gcp-org` (organization level), `aws-network` and `gcp-network` (per environment),
+a shared `policy` module (OPA/Conftest), and a shared `backend` module (remote
+state). Org-level resources (AWS Organizations/SCPs,
 GCP folders/org policies) are declared in Terraform and verified via `plan`;
 they are applied only in a real organization. The network foundation is
 validated locally against LocalStack (AWS) and GCP emulators.
