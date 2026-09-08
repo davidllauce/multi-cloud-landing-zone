@@ -25,3 +25,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "labels" {
+  description = "Additional labels for the GCS bucket"
+  type        = map(string)
+  default     = {}
+}

@@ -167,6 +167,32 @@ Apply order (see `docs/architecture`):
 Org-level resources are modeled in Terraform and verified via `plan`; they
 require a real AWS Organization / GCP Organization to apply.
 
+## Design
+
+A landing zone is the organization-level foundation — identity, networking,
+security, and governance — that every workload builds on. This repository
+applies the same foundation across AWS and GCP with a single control plane.
+
+It is split into **layers that apply once** and **environments that repeat**:
+
+- `0-bootstrap` applies once and provisions the remote-state buckets (GCS/S3).
+  It runs first because everything else stores its state there.
+- `1-landing-zone` applies once and provisions the **organization-level**
+  resources: AWS Organizations + SCPs (`aws-org`) and GCP folders (`gcp-org`).
+  An organization is a single entity, so it has no `dev`/`stg`/`prd` variants.
+- `2-environments/{dev, stg, prd}` provisions **networking per environment**
+  (`aws-network` + `gcp-network`). Networks do repeat, so each environment is a
+  separate Terraform root module with its own state
+  (`prefix = "terraform/<env>"`).
+
+**Why this separation:** org-level resources and per-environment networks have
+different lifecycles and different states. Bootstrap must run before
+landing-zone, and landing-zone before any environment. This mirrors the Fabric
+FAST and AWS Landing Zone patterns.
+
+**Policy-as-code:** every resource must carry the mandatory `dll-*` labels/tags
+(see `terraform/modules/policy/`), enforced by OPA/Conftest in CI.
+
 ## Decisions
 
 See [`ADRs/`](ADRs/). SLOs in [`docs/slos.yaml`](docs/slos.yaml).
