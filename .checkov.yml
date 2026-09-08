@@ -1,0 +1,20 @@
+# Checkov baseline — skips with justification.
+# Only checks that do not apply to this repo are skipped; security-relevant
+# findings are fixed in code, never skipped here.
+
+skip-check:
+  # S3 state bucket: access logging to itself is impossible (recursion); a
+  # separate logging bucket is out of scope for a state bucket.
+  - CKV_AWS_18
+  # S3 state bucket: cross-region replication adds cost and is not required for
+  # Terraform state (GCS/S3 versioning already protects it).
+  - CKV_AWS_144
+  # S3 state bucket: event notifications are not needed for Terraform state.
+  - CKV2_AWS_62
+  # S3 state bucket: lifecycle already expires old versions; aborting failed
+  # multipart uploads is not applicable to state.
+  - CKV_AWS_300
+  # GCS state bucket: access logging to itself is not applicable.
+  - CKV_GCP_62
+  # Public subnets intentionally assign public IPs (map_public_ip_on_launch).
+  - CKV_AWS_130

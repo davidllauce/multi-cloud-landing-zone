@@ -7,10 +7,28 @@ resource "google_compute_network" "main" {
 resource "google_compute_subnetwork" "main" {
   for_each = { for s in var.subnets : s.name => s }
 
-  name          = each.value.name
-  region        = var.region
-  network       = google_compute_network.main.id
-  ip_cidr_range = each.value.cidr
+  name                     = each.value.name
+  region                   = var.region
+  network                  = google_compute_network.main.id
+  ip_cidr_range            = each.value.cidr
+  private_ip_google_access = true
+
+  log_config {
+    aggregation_interval = "INTERVAL_5_SEC"
+    flow_sampling        = 0.5
+    metadata             = "INCLUDE_ALL_METADATA"
+  }
+}
+
+resource "google_compute_firewall" "allow_internal" {
+  name    = "allow-internal"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "all"
+  }
+
+  source_ranges = [for s in var.subnets : s.cidr]
 }
 
 resource "google_compute_ha_vpn_gateway" "main" {

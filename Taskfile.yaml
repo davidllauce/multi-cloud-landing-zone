@@ -14,8 +14,8 @@ tasks:
       - uv run pre-commit install
 
   check:
-    desc: Run all validations (fmt + validate + lint + test + policy)
-    deps: [iac:fmt, iac:validate, iac:lint, test, iac:test]
+    desc: Run all validations (fmt + validate + lint + scan + test + policy)
+    deps: [iac:fmt, iac:validate, iac:lint, iac:scan, test, iac:test]
 
   iac:fmt:
     desc: Check Terraform formatting (recursive)
@@ -38,6 +38,12 @@ tasks:
     dir: terraform
     cmds:
       - tflint --recursive
+
+  iac:scan:
+    desc: Scan IaC with Checkov (security-as-code)
+    dir: .
+    cmds:
+      - checkov -d terraform --config-file .checkov.yml --compact
 
   iac:plan:
     desc: Run terraform plan (dry-run) on dev (representative env)

@@ -14,6 +14,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "account_id" {
+  description = "AWS account ID (used by the KMS key policy)"
+  type        = string
+  default     = "000000000000"
+}
+
 variable "tags" {
   description = "Additional tags for the S3 bucket"
   type        = map(string)

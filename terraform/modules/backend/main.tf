@@ -31,12 +31,30 @@ resource "aws_s3_bucket_versioning" "state" {
   }
 }
 
+resource "aws_kms_key" "state" {
+  description             = "KMS key for Terraform state encryption"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "Enable IAM User Permissions"
+      Effect    = "Allow"
+      Principal = { AWS = "arn:aws:iam::${var.account_id}:root" }
+      Action    = "kms:*"
+      Resource  = "*"
+    }]
+  })
+  tags = var.tags
+}
+
 resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   bucket = aws_s3_bucket.state.id
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      kms_master_key_id = aws_kms_key.state.arn
+      sse_algorithm     = "aws:kms"
     }
   }
 }

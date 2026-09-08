@@ -32,6 +32,10 @@ jobs:
       - name: TFLint (recursive)
         working-directory: terraform
         run: tflint --recursive
+      - name: Checkov (security-as-code)
+        run: |
+          pip install checkov --quiet
+          checkov -d terraform --config-file .checkov.yml --compact
 
   test:
     name: Test
