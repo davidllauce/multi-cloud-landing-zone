@@ -4,10 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   validate:
@@ -45,3 +45,102 @@ jobs:
       - uses: open-policy-agent/setup-conftest@v2
       - name: Policy (Conftest)
         run: conftest test tests/fixtures/plan_valid.json --policy terraform/modules/policy
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+      - name: Terraform test (modules, mock providers)
+        working-directory: terraform/modules
+        run: |
+          for m in aws-org aws-network gcp-org gcp-network; do
+            echo "==> terraform test $m"
+            (cd "$m" && terraform init -backend=false && terraform test)
+          done
+
+  plan:
+    name: Plan (WIF/OIDC)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+      - name: Check cloud auth configured
+        id: authcheck
+        env:
+          GCP_WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
+          AWS_OIDC_ROLE_ARN: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+        run: |
+          if [ -n "$GCP_WIF_PROVIDER" ] || [ -n "$AWS_OIDC_ROLE_ARN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Auth GCP (Workload Identity)
+        if: steps.authcheck.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Auth AWS (OIDC)
+        if: steps.authcheck.outputs.configured == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          role-session-name: terraform-plan
+      - name: Terraform plan (all environments)
+        if: steps.authcheck.outputs.configured == 'true'
+        working-directory: terraform
+        run: |
+          for env in 0-bootstrap 1-landing-zone 2-environments/dev 2-environments/stg 2-environments/prd; do
+            echo "==> planning $env"
+            (cd "$env" && terraform init -backend=false && terraform plan -detailed-exitcode)
+          done
+
+  apply:
+    name: Apply (WIF/OIDC)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+      - name: Check cloud auth configured
+        id: authcheck
+        env:
+          GCP_WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
+          AWS_OIDC_ROLE_ARN: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+        run: |
+          if [ -n "$GCP_WIF_PROVIDER" ] || [ -n "$AWS_OIDC_ROLE_ARN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Auth GCP (Workload Identity)
+        if: steps.authcheck.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Auth AWS (OIDC)
+        if: steps.authcheck.outputs.configured == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          role-session-name: terraform-apply
+      - name: Terraform apply (all environments)
+        if: steps.authcheck.outputs.configured == 'true'
+        working-directory: terraform
+        run: |
+          for env in 0-bootstrap 1-landing-zone 2-environments/dev 2-environments/stg 2-environments/prd; do
+            echo "==> applying $env"
+            (cd "$env" && terraform init -backend=false && terraform apply -auto-approve)
+          done

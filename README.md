@@ -62,6 +62,31 @@ task iac:plan    # terraform plan (dry-run) on the dev environment
 task iac:cost    # Infracost estimate (requires INFRACOST_API_KEY)
 ```
 
+## Authentication (zero static credentials)
+
+Cloud credentials are never stored in the repository. See
+[`ADRs/ADR-003`](ADRs/ADR-003-zero-trust-credentials-wif-oidc.md).
+
+**Local (validate / test / dry-run plan):**
+
+```bash
+gcloud auth application-default login   # GCP
+export AWS_PROFILE=my-profile           # AWS
+
+task check        # fmt + validate + tflint + pytest + conftest (no cloud access)
+task iac:plan     # terraform plan (dry-run, no apply)
+```
+
+**CI (plan / apply with federated identity):**
+
+- GCP via **Workload Identity Federation** (`google-github-actions/auth@v2`).
+- AWS via **OIDC** (`aws-actions/configure-aws-credentials@v4`).
+- Requires these GitHub secrets: `GCP_WIF_PROVIDER`, `GCP_SERVICE_ACCOUNT`,
+  `AWS_OIDC_ROLE_ARN`. If they are not set, the `plan`/`apply` jobs are skipped.
+
+**Applying to a real organization** requires provisioning the WIF pool/provider
+(GCP) and the OIDC role (AWS); see the README "Apply order" below.
+
 ## Usage
 
 Consume a module directly from this repository:

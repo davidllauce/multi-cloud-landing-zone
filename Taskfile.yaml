@@ -14,8 +14,8 @@ tasks:
       - uv run pre-commit install
 
   check:
-    desc: Run all validations (fmt + validate + lint + policy + test)
-    deps: [iac:fmt, iac:validate, iac:lint, test]
+    desc: Run all validations (fmt + validate + lint + test + policy)
+    deps: [iac:fmt, iac:validate, iac:lint, test, iac:test]
 
   iac:fmt:
     desc: Check Terraform formatting (recursive)
@@ -50,6 +50,16 @@ tasks:
     desc: Run Conftest against the fixture plan
     cmds:
       - conftest test tests/fixtures/plan_valid.json --policy terraform/modules/policy
+
+  iac:test:
+    desc: Run terraform test with mock providers (per module)
+    dir: terraform/modules
+    cmds:
+      - |
+        for m in aws-org aws-network gcp-org gcp-network; do
+          echo "==> terraform test $m"
+          (cd "$m" && terraform init -backend=false >/dev/null && terraform test)
+        done
 
   iac:cost:
     desc: Estimate costs with Infracost (requires INFRACOST_API_KEY)
