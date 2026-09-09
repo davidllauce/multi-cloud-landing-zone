@@ -28,7 +28,7 @@ jobs:
             echo "==> validating $env"
             (cd "$env" && terraform init -backend=false && terraform validate)
           done
-      - uses: terraform-linters/setup-tflint@v4
+      - uses: terraform-linters/setup-tflint@v6
       - name: TFLint (recursive)
         working-directory: terraform
         run: tflint --recursive
