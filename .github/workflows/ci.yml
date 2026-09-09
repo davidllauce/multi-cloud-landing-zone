@@ -14,8 +14,8 @@ jobs:
     name: Validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Terraform fmt (recursive)
@@ -28,7 +28,7 @@ jobs:
             echo "==> validating $env"
             (cd "$env" && terraform init -backend=false && terraform validate)
           done
-      - uses: terraform-linters/setup-tflint@v4
+      - uses: terraform-linters/setup-tflint@v6
       - name: TFLint (recursive)
         working-directory: terraform
         run: tflint --recursive
@@ -41,7 +41,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv python install 3.12 && uv sync --all-extras
       - name: Pytest
@@ -53,7 +53,7 @@ jobs:
           conftest --version
       - name: Policy (Conftest)
         run: conftest test tests/fixtures/plan_valid.json --policy terraform/modules/policy
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Terraform test (modules, mock providers)
@@ -72,8 +72,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Check cloud auth configured
@@ -89,13 +89,13 @@ jobs:
           fi
       - name: Auth GCP (Workload Identity)
         if: steps.authcheck.outputs.configured == 'true'
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - name: Auth AWS (OIDC)
         if: steps.authcheck.outputs.configured == 'true'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           role-session-name: terraform-plan
@@ -117,8 +117,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Check cloud auth configured
@@ -134,13 +134,13 @@ jobs:
           fi
       - name: Auth GCP (Workload Identity)
         if: steps.authcheck.outputs.configured == 'true'
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - name: Auth AWS (OIDC)
         if: steps.authcheck.outputs.configured == 'true'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           role-session-name: terraform-apply
