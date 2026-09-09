@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Terraform fmt (recursive)
@@ -49,7 +49,7 @@ jobs:
       - uses: open-policy-agent/setup-conftest@v2
       - name: Policy (Conftest)
         run: conftest test tests/fixtures/plan_valid.json --policy terraform/modules/policy
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Terraform test (modules, mock providers)
@@ -69,7 +69,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Check cloud auth configured
@@ -114,7 +114,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.9"
       - name: Check cloud auth configured
