@@ -53,14 +53,31 @@ provider-specific resources are used only where the clouds genuinely differ.
 | [LocalStack](https://localstack.cloud/) | AWS emulation for local runs |
 | GCP emulators | BigQuery / Pub/Sub / etc. for local runs |
 
-## Quickstart
+## Replicate locally
 
-```bash
-task setup       # uv venv + pre-commit
-task check       # fmt + validate + tflint + pytest + conftest
-task iac:plan    # terraform plan (dry-run) on the dev environment
-task iac:cost    # Infracost estimate (requires INFRACOST_API_KEY)
-```
+Everything below runs with no cloud credentials (`validate`, `test`, and
+`plan` are dry-run). Install the toolchain once, then run the steps in order:
+
+1. **Install Terraform via tenv**
+   ```bash
+   tenv tf install 1.9.8
+   ```
+2. **Bootstrap the repo** (Python env + pre-commit hooks)
+   ```bash
+   task setup
+   ```
+3. **Run the full validation gate** (fmt + validate + tflint + checkov + pytest + conftest + terraform test)
+   ```bash
+   task check
+   ```
+4. **Dry-run plan** on the representative `dev` environment (no apply)
+   ```bash
+   task iac:plan
+   ```
+5. **Estimate cost** (optional, requires `INFRACOST_API_KEY`)
+   ```bash
+   task iac:cost
+   ```
 
 ## Authentication (zero static credentials)
 
@@ -127,6 +144,19 @@ task iac:policy   # conftest test tests/fixtures/plan_valid.json
 task test         # pytest (includes policy checks)
 ```
 
+## CI pipeline
+
+```mermaid
+flowchart LR
+  C["commit / PR"] --> V["validate<br/>fmt · validate · tflint · checkov"]
+  V --> T["test<br/>pytest · conftest · terraform test"]
+  T --> PL["plan (PR)<br/>WIF / OIDC"]
+  PL --> AP["apply (main)<br/>environment: production"]
+```
+
+- `validate` + `test` run on every PR and push; `plan` runs on PRs; `apply` runs only on `main`, gated behind the `production` environment.
+- `plan`/`apply` authenticate via **federated identity** (GCP WIF + AWS OIDC) and are skipped when no cloud secrets are configured.
+
 ## Project layout
 
 ```text
@@ -153,6 +183,24 @@ Apply order (see `docs/architecture`):
 
 ```text
 0-bootstrap → 1-landing-zone → 2-environments/{dev, stg, prd}
+```
+
+```mermaid
+flowchart TD
+  subgraph L0["0 · bootstrap — applied ONCE"]
+    SB["remote state<br/>GCS / S3"]
+  end
+  subgraph L1["1 · landing-zone — applied ONCE"]
+    AO["aws-org<br/>Organization + SCP"]
+    GO["gcp-org<br/>folders + org policy"]
+  end
+  subgraph L2["2 · environments — repeated per env"]
+    DEV["dev · aws-network + gcp-network"]
+    STG["stg · aws-network + gcp-network"]
+    PRD["prd · aws-network + gcp-network"]
+  end
+  L0 --> L1 --> L2
+  POL["policy-as-code (OPA)<br/>dll-* tags required"] -.-> L2
 ```
 
 ## What is applied vs plan-only
